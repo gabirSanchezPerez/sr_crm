@@ -164,3 +164,7 @@ _modules/*
 .agents
 .codex
 openspec/
+
+plantilla/
+crm/docs/
+crm/writable/backups
