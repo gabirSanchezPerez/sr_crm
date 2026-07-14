@@ -46,4 +46,47 @@ final class HealthTest extends CIUnitTestCase
             'baseURL "' . $reader->baseURL . '" in app/Config/App.php is not valid URL',
         );
     }
+
+    public function testApplicationShellRendersExpectedRegions(): void
+    {
+        $cards = [
+            'customers' => ['label' => 'Clientes', 'value' => 0, 'icon' => 'feather-users'],
+        ];
+        $html = view('dashboard/index', [
+            'title' => 'Dashboard | CRM',
+            'heading' => 'Dashboard',
+            'breadcrumbs' => ['Inicio' => null],
+            'summary' => ['cards' => $cards, 'chart' => ['labels' => ['Clientes'], 'series' => [0]]],
+        ]);
+
+        $this->assertStringContainsString('nxl-navigation', $html);
+        $this->assertStringContainsString('nxl-header', $html);
+        $this->assertStringContainsString('main-content', $html);
+        $this->assertStringContainsString('Resumen comercial', $html);
+    }
+
+    public function testApprovedShellAssetsExist(): void
+    {
+        foreach ([
+            'assets/css/bootstrap.min.css',
+            'assets/css/theme.min.css',
+            'assets/vendors/css/vendors.min.css',
+            'assets/vendors/js/vendors.min.js',
+            'assets/js/common-init.min.js',
+            'assets/images/logo-full.png',
+        ] as $asset) {
+            $this->assertFileExists(PUBLICPATH . $asset, $asset);
+        }
+    }
+
+    public function testShellProvidesAccessibleEmptyAndLoadingStates(): void
+    {
+        $empty = view('components/empty_state');
+        $loading = view('components/loading_state');
+
+        $this->assertStringContainsString('role="status"', $empty);
+        $this->assertStringContainsString('Sin resultados', $empty);
+        $this->assertStringContainsString('aria-live="polite"', $loading);
+        $this->assertStringContainsString('Cargando...', $loading);
+    }
 }
