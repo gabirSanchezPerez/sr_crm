@@ -57,4 +57,31 @@ final class AuthorizationServiceTest extends CIUnitTestCase
         $this->assertFalse($service->allows(6, 'usuario', 'delete'));
         $this->assertSame('team', $service->scope(6, 'cliente'));
     }
+
+    public function testProposalPermissionsAndScopesAreExplicit(): void
+    {
+        $service = new AuthorizationService();
+
+        foreach ([1, 2, 3] as $profileId) {
+            $this->assertTrue($service->allows($profileId, 'propuesta', 'index'));
+            $this->assertTrue($service->allows($profileId, 'propuesta', 'add'));
+            $this->assertTrue($service->allows($profileId, 'propuesta', 'edit'));
+            $this->assertTrue($service->allows($profileId, 'propuesta', 'delete'));
+        }
+
+        foreach ([4, 5, 6] as $profileId) {
+            $this->assertTrue($service->allows($profileId, 'propuesta', 'index'));
+            $this->assertFalse($service->allows($profileId, 'propuesta', 'add'));
+            $this->assertFalse($service->allows($profileId, 'propuesta', 'edit'));
+            $this->assertFalse($service->allows($profileId, 'propuesta', 'delete'));
+        }
+
+        $this->assertSame('all', $service->scope(1, 'propuesta'));
+        $this->assertSame('team', $service->scope(2, 'propuesta'));
+        $this->assertSame('owner', $service->scope(3, 'propuesta'));
+        $this->assertTrue($service->recordIsInScope(['perfil_id' => 1, 'user_id' => 9], 'propuesta', 100, 10));
+        $this->assertFalse($service->recordIsInScope(['perfil_id' => 3, 'user_id' => 9], 'propuesta', 100, 10));
+        $this->assertTrue($service->recordIsInScope(['perfil_id' => 2, 'ucomercial_id' => 20], 'propuesta', 100, 20));
+        $this->assertFalse($service->recordIsInScope(['perfil_id' => 2, 'ucomercial_id' => 20], 'propuesta', 100, 30));
+    }
 }

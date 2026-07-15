@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\FollowUpModel;
+use CodeIgniter\HTTP\Files\UploadedFile;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -14,20 +15,53 @@ final class FollowUpService
     public function rows(array $identity, string $scope, ?string $search = null): array { return $this->model->activeRows($identity, $scope, $search); }
     /** @return list<array<string,mixed>> */
     public function forParent(string $parentType, int $parentId, array $identity, string $scope, ?string $search = null): array { return $this->model->parentIsAccessible($parentType, $parentId, $identity, $scope) ? $this->model->activeByParent($parentType, $parentId, $identity, $scope, $search) : []; }
+    /** @return list<array<string,mixed>> */
+    public function forProposal(int $proposalId, array $identity, string $scope, ?string $search = null): array { return $this->model->activeByProposal($proposalId, $identity, $scope, $search); }
     public function find(int $id, array $identity, string $scope): ?array { return $this->model->activeById($id, $identity, $scope); }
     /** @return list<array{id:string,text:string}> */
     public function parentOptions(array $identity, string $scope, ?string $search = null): array { return $this->model->parentOptions($identity, $scope, $search); }
     public function parentIsAccessible(string $parentType, int $parentId, array $identity, string $scope): bool { return $this->model->parentIsAccessible($parentType, $parentId, $identity, $scope); }
 
     /** @param array<string,mixed> $input */
-    public function create(array $input, array $identity, string $scope, int $actorId): int
+    /** @param list<UploadedFile> $proposalDocuments */
+    public function create(array $input, array $identity, string $scope, int $actorId, array $proposalDocuments = []): int
     {
         $data = $this->payload($input, true);
         $this->guardReferences($data);
         $this->guardParent($data, $identity, $scope);
+        $proposalService = new ProposalService();
+        if ((int) ($data['propuesta_id'] ?? 0) > 0 && ! $proposalService->proposalMatchesFollowUpParent((int) $data['propuesta_id'], $data, $identity, $scope)) {
+            throw new InvalidArgumentException('La propuesta no corresponde a la cuenta del seguimiento.');
+        }
         $data['u_crea'] = $actorId; $data['f_creacion'] = date('Y-m-d H:i:s'); $data['deleted'] = 0;
-        $id = $this->model->insert($data, true);
-        if ($id === false) { throw new RuntimeException('No fue posible crear el seguimiento.'); }
+        $db = db_connect();
+        $storedProposalDocuments = [];
+        $db->transStart();
+        try {
+            if ((int) $data['actividad_id'] === 3 && (int) ($data['propuesta_id'] ?? 0) <= 0) {
+                $proposalInput = $input + [
+                    'propuesta_cliente_id' => (string) ($input['cliente_id'] ?? ''),
+                    'actor_id' => $actorId,
+                    'ejecutivo_id' => (int) $data['ejecutivo_id'],
+                ];
+                $data['propuesta_id'] = $proposalService->createWithoutTransaction($proposalInput, $identity, $scope, $actorId);
+                $storedProposalDocuments = $proposalService->attachDocuments((int) $data['propuesta_id'], $proposalDocuments, $identity, $scope, $actorId);
+            }
+            $data = $this->schemaPayload($data);
+            $id = $this->model->insert($data, true);
+            if ($id === false) { throw new RuntimeException('No fue posible crear el seguimiento.'); }
+        } catch (\Throwable $exception) {
+            $db->transRollback();
+            $this->resetTransactionStatus($db);
+            $this->cleanupProposalDocuments($storedProposalDocuments);
+            throw $exception;
+        }
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            $this->resetTransactionStatus($db);
+            $this->cleanupProposalDocuments($storedProposalDocuments);
+            throw new RuntimeException('No fue posible crear el seguimiento.');
+        }
         return (int) $id;
     }
 
@@ -39,8 +73,11 @@ final class FollowUpService
         $data = $this->payload($input, false, $record);
         $this->guardReferences($data);
         $this->guardParent($data, $identity, $scope);
+        if ((int) ($data['propuesta_id'] ?? 0) > 0 && ! (new ProposalService())->proposalMatchesFollowUpParent((int) $data['propuesta_id'], $data, $identity, $scope)) {
+            throw new InvalidArgumentException('La propuesta no corresponde a la cuenta del seguimiento.');
+        }
         $data['u_modifica'] = $actorId; $data['f_modificacion'] = date('Y-m-d H:i:s');
-        if (! $this->model->update($id, $data)) { throw new RuntimeException('No fue posible actualizar el seguimiento.'); }
+        if (! $this->model->update($id, $this->schemaPayload($data))) { throw new RuntimeException('No fue posible actualizar el seguimiento.'); }
     }
 
     public function softDelete(int $id, array $identity, string $scope, int $actorId): void
@@ -62,6 +99,7 @@ final class FollowUpService
             'estado_id' => (int) ($input['estado_id'] ?? 0),
             'cliente_id' => $parentId,
             'tipo_id' => $tipoId,
+            'propuesta_id' => ($input['propuesta_id'] ?? $current['propuesta_id'] ?? '') === '' ? null : (int) ($input['propuesta_id'] ?? $current['propuesta_id'] ?? 0),
             'ejecutivo_id' => (int) ($input['ejecutivo_id'] ?? 0),
             'monto' => ($input['monto'] ?? '') === '' ? null : (float) $input['monto'],
         ];
@@ -108,5 +146,30 @@ final class FollowUpService
     {
         $parentType = (int) $data['tipo_id'] === 1 ? 'cliente' : 'cpotencial';
         if ((int) $data['cliente_id'] <= 0 || ! $this->model->parentIsAccessible($parentType, (int) $data['cliente_id'], $identity, $scope)) { throw new InvalidArgumentException('La cuenta padre no esta disponible para este usuario.'); }
+    }
+
+    /** @param array<string,mixed> $data @return array<string,mixed> */
+    private function schemaPayload(array $data): array
+    {
+        if (! db_connect()->fieldExists('propuesta_id', 'seguimiento')) {
+            unset($data['propuesta_id']);
+        }
+        return $data;
+    }
+
+    /** @param list<string> $paths */
+    private function cleanupProposalDocuments(array $paths): void
+    {
+        $documents = new DocumentService();
+        foreach ($paths as $path) {
+            $documents->removeStoredFile($path);
+        }
+    }
+
+    private function resetTransactionStatus(object $db): void
+    {
+        if (method_exists($db, 'resetTransStatus')) {
+            $db->resetTransStatus();
+        }
     }
 }

@@ -43,6 +43,15 @@ final class DocumentService
         return $this->model->activeById($id, $identity, $scope);
     }
 
+    /** @return list<array<string, mixed>> */
+    public function forProposal(int $proposalId, array $identity, string $scope, ?string $search = null): array
+    {
+        if (! $this->model->proposalIsAccessible($proposalId, $identity, $scope)) {
+            return [];
+        }
+        return $this->model->activeByProposal($proposalId, $identity, $scope, $search);
+    }
+
     /** @param array<string, mixed> $input */
     public function create(array $input, ?UploadedFile $file, array $identity, string $scope, int $actorId): int
     {
@@ -58,6 +67,38 @@ final class DocumentService
         $data = [
             'cliente_id' => $parentType === 'cliente' ? $parentId : null,
             'cpotencial_id' => $parentType === 'cpotencial' ? $parentId : null,
+            'nombre' => trim((string) ($input['nombre'] ?? '')) ?: pathinfo($file->getClientName(), PATHINFO_FILENAME),
+            'archivo_original' => $this->safeClientName($file->getClientName()),
+            'archivo_ruta' => $stored,
+            'mime' => $file->getClientMimeType(),
+            'tamano' => $file->getSize(),
+            'u_crea' => $actorId,
+            'f_creacion' => date('Y-m-d H:i:s'),
+            'deleted' => 0,
+        ];
+        $id = $this->model->insert($data, true);
+        if ($id === false) {
+            @unlink($this->absolutePath($stored));
+            throw new RuntimeException('No fue posible crear el documento.');
+        }
+        return (int) $id;
+    }
+
+    /** @param array<string,mixed> $input */
+    public function createForProposal(int $proposalId, array $input, ?UploadedFile $file, array $identity, string $scope, int $actorId): int
+    {
+        if (! $this->model->proposalIsAccessible($proposalId, $identity, $scope)) {
+            throw new InvalidArgumentException('La propuesta no esta disponible para este usuario.');
+        }
+        if ($file === null || (! $file->isValid() && ! $this->isTestingUpload($file))) {
+            throw new InvalidArgumentException('Selecciona un archivo valido.');
+        }
+        $this->validateUpload($file);
+        $stored = $this->storeFile($file);
+        $data = [
+            'cliente_id' => null,
+            'cpotencial_id' => null,
+            'propuesta_id' => $proposalId,
             'nombre' => trim((string) ($input['nombre'] ?? '')) ?: pathinfo($file->getClientName(), PATHINFO_FILENAME),
             'archivo_original' => $this->safeClientName($file->getClientName()),
             'archivo_ruta' => $stored,
@@ -102,6 +143,19 @@ final class DocumentService
             throw new RuntimeException('Ruta de archivo invalida.');
         }
         return rtrim(WRITEPATH . 'uploads', DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $clean);
+    }
+
+    public function removeStoredFile(string $relativePath): void
+    {
+        try {
+            $path = $this->absolutePath($relativePath);
+        } catch (RuntimeException) {
+            return;
+        }
+
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 
     private function isTestingUpload(UploadedFile $file): bool

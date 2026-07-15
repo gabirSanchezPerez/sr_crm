@@ -9,6 +9,7 @@ use App\Services\AuthorizationService;
 use App\Services\ContactService;
 use App\Services\DocumentService;
 use App\Services\FollowUpService;
+use App\Services\ProposalService;
 use App\Services\ProspectService;
 use CodeIgniter\HTTP\ResponseInterface;
 use RuntimeException;
@@ -164,6 +165,7 @@ final class Prospects extends BaseController
         $contacts = new ContactService();
         $documents = new DocumentService();
         $followUps = new FollowUpService();
+        $proposals = new ProposalService();
 
         return view('prospects/form', [
             'title' => ($isNew ? 'Nuevo Cliente Potencial' : 'Editar Cliente Potencial') . ' | CRM',
@@ -186,6 +188,10 @@ final class Prospects extends BaseController
             'canAddFollowUp' => $this->authorization->allows((int) session('user.perfil_id'), 'seguimiento', 'add'),
             'canEditFollowUp' => $this->authorization->allows((int) session('user.perfil_id'), 'seguimiento', 'edit'),
             'canDeleteFollowUp' => $this->authorization->allows((int) session('user.perfil_id'), 'seguimiento', 'delete'),
+            'proposals' => ! $isNew && isset($record['id']) ? $proposals->forParent('cpotencial', (int) $record['id'], $this->identity(), $this->authorization->scope((int) session('user.perfil_id'), 'propuesta')) : [],
+            'canAddProposal' => $this->authorization->allows((int) session('user.perfil_id'), 'propuesta', 'add'),
+            'canEditProposal' => $this->authorization->allows((int) session('user.perfil_id'), 'propuesta', 'edit'),
+            'canDeleteProposal' => $this->authorization->allows((int) session('user.perfil_id'), 'propuesta', 'delete'),
         ]);
     }
 
@@ -280,4 +286,3 @@ final class Prospects extends BaseController
         return $this->response->setStatusCode(404)->setBody('Prospecto no encontrado.');
     }
 }
-

@@ -98,7 +98,10 @@ final class Documents extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['exito' => false, 'errors' => $this->validator->getErrors()]);
         }
         try {
-            $id = $this->documents->create($this->request->getPost(), $this->request->getFile('archivo'), $this->identity(), $this->scope(), $this->actorId());
+            $proposalId = (int) $this->request->getPost('propuesta_id');
+            $id = $proposalId > 0
+                ? $this->documents->createForProposal($proposalId, $this->request->getPost(), $this->request->getFile('archivo'), $this->identity(), $this->scope(), $this->actorId())
+                : $this->documents->create($this->request->getPost(), $this->request->getFile('archivo'), $this->identity(), $this->scope(), $this->actorId());
         } catch (InvalidArgumentException|RuntimeException $exception) {
             return $this->response->setStatusCode(422)->setJSON(['exito' => false, 'message' => $exception->getMessage()]);
         }
@@ -158,6 +161,7 @@ final class Documents extends BaseController
             'cpotencial_id' => 'permit_empty|is_natural',
             'parent_type' => 'permit_empty|in_list[cliente,cpotencial]',
             'parent_id' => 'permit_empty|is_natural_no_zero',
+            'propuesta_id' => 'permit_empty|is_natural_no_zero',
         ];
     }
 

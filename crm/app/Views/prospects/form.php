@@ -76,6 +76,7 @@
 <?php if (! $isNew): ?>
     <?= view('contacts/subpanel', ['contacts' => $contacts, 'parentType' => 'cpotencial', 'parentId' => (int) ($prospect['id'] ?? 0), 'canAddContact' => $canAddContact, 'canEditContact' => $canEditContact, 'canDeleteContact' => $canDeleteContact]) ?>
     <?= view('documents/subpanel', ['documents' => $documents, 'parentType' => 'cpotencial', 'parentId' => (int) ($prospect['id'] ?? 0), 'canAddDocument' => $canAddDocument, 'canDeleteDocument' => $canDeleteDocument]) ?>
+    <?= view('proposals/subpanel', ['proposals' => $proposals, 'parentType' => 'cpotencial', 'parentId' => (int) ($prospect['id'] ?? 0), 'canAddProposal' => $canAddProposal, 'canEditProposal' => $canEditProposal, 'canDeleteProposal' => $canDeleteProposal]) ?>
     <?= view('followups/subpanel', ['followUps' => $followUps, 'parentType' => 'cpotencial', 'parentId' => (int) ($prospect['id'] ?? 0), 'canAddFollowUp' => $canAddFollowUp, 'canEditFollowUp' => $canEditFollowUp, 'canDeleteFollowUp' => $canDeleteFollowUp]) ?>
 <?php endif ?>
 <?= $this->endSection() ?>

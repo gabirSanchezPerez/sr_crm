@@ -10,7 +10,7 @@ final class DocumentModel extends Model
     protected $primaryKey = 'id';
     protected $returnType = 'array';
     protected $allowedFields = [
-        'cliente_id', 'cpotencial_id', 'nombre', 'archivo_original', 'archivo_ruta',
+        'cliente_id', 'cpotencial_id', 'propuesta_id', 'nombre', 'archivo_original', 'archivo_ruta',
         'mime', 'tamano', 'u_crea', 'u_modifica', 'f_creacion', 'f_modificacion', 'deleted',
     ];
     protected $useTimestamps = false;
@@ -41,6 +41,36 @@ final class DocumentModel extends Model
             ->groupEnd();
         $this->applyParentScope($builder, $identity, $scope);
         return $builder->get()->getRowArray();
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function activeByProposal(int $proposalId, array $identity, string $scope, ?string $search = null): array
+    {
+        $builder = $this->baseBuilder()
+            ->join('propuesta p', 'd.propuesta_id = p.id AND p.deleted = 0', 'inner')
+            ->where('d.deleted', 0)
+            ->where('d.propuesta_id', $proposalId)
+            ->orderBy('d.nombre', 'ASC');
+        $this->applyProposalScope($builder, $identity, $scope);
+        $this->applySearch($builder, $search);
+        return $builder->get()->getResultArray();
+    }
+
+    public function proposalIsAccessible(int $proposalId, array $identity, string $scope): bool
+    {
+        $builder = $this->db->table('propuesta p')
+            ->select('p.id')
+            ->join('usuario_ucomercial uuc', 'uuc.usuario_id = p.ejecutivo_id AND uuc.deleted = 0', 'left')
+            ->where('p.id', $proposalId)
+            ->where('p.deleted', 0);
+        if ($scope === 'owner') {
+            $builder->where('p.ejecutivo_id', (int) ($identity['user_id'] ?? 0));
+        } elseif ($scope === 'team') {
+            $builder->where('uuc.ucomercial_id', (int) ($identity['ucomercial_id'] ?? 0));
+        } elseif ($scope !== 'all') {
+            return false;
+        }
+        return $builder->get()->getRowArray() !== null;
     }
 
     /** @return list<array<string, mixed>> */
@@ -100,6 +130,22 @@ final class DocumentModel extends Model
         }
         if ($scope === 'team') {
             $builder->groupStart()->where('uuc_cl.ucomercial_id', (int) ($identity['ucomercial_id'] ?? 0))->orWhere('uuc_cp.ucomercial_id', (int) ($identity['ucomercial_id'] ?? 0))->groupEnd();
+            return;
+        }
+        if ($scope !== 'all') {
+            $builder->where('1 =', 0, false);
+        }
+    }
+
+    private function applyProposalScope(object $builder, array $identity, string $scope): void
+    {
+        if ($scope === 'owner') {
+            $builder->where('p.ejecutivo_id', (int) ($identity['user_id'] ?? 0));
+            return;
+        }
+        if ($scope === 'team') {
+            $builder->join('usuario_ucomercial uuc_p', 'uuc_p.usuario_id = p.ejecutivo_id AND uuc_p.deleted = 0', 'left')
+                ->where('uuc_p.ucomercial_id', (int) ($identity['ucomercial_id'] ?? 0));
             return;
         }
         if ($scope !== 'all') {

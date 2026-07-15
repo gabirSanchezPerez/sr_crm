@@ -9,7 +9,7 @@ final class FollowUpModel extends Model
     protected $table = 'seguimiento';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
-    protected $allowedFields = ['fecha','hora','actividad_id','descripcion','adjunto','estado_id','cliente_id','ejecutivo_id','tipo_id','monto','u_crea','u_modifica','f_creacion','f_modificacion','deleted'];
+    protected $allowedFields = ['fecha','hora','actividad_id','descripcion','adjunto','estado_id','cliente_id','ejecutivo_id','tipo_id','propuesta_id','monto','u_crea','u_modifica','f_creacion','f_modificacion','deleted'];
     protected $useTimestamps = false;
 
     /** @return list<array<string,mixed>> */
@@ -39,6 +39,18 @@ final class FollowUpModel extends Model
         } else {
             $builder->where('1 =', 0, false);
         }
+        $this->applyScope($builder, $identity, $scope);
+        $this->applySearch($builder, $search);
+        return $builder->get()->getResultArray();
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function activeByProposal(int $proposalId, array $identity, string $scope, ?string $search = null): array
+    {
+        if (! $this->db->fieldExists('propuesta_id', $this->table)) {
+            return [];
+        }
+        $builder = $this->baseBuilder()->where('s.deleted', 0)->where('s.propuesta_id', $proposalId)->orderBy('s.fecha', 'DESC')->orderBy('s.hora', 'DESC');
         $this->applyScope($builder, $identity, $scope);
         $this->applySearch($builder, $search);
         return $builder->get()->getResultArray();
@@ -75,8 +87,12 @@ final class FollowUpModel extends Model
 
     private function baseBuilder(): object
     {
-        return $this->db->table($this->table . ' s')
-            ->select('s.*, a.nombre AS actividad, e.nombre AS estado, u.nombre AS ejecutivo, cl.razon_social AS cliente, cl.marca AS cliente_marca, cp.razon_social AS cpotencial, cp.marca AS cpotencial_marca, uc.nombre AS creador')
+        $select = 's.*, a.nombre AS actividad, e.nombre AS estado, u.nombre AS ejecutivo, cl.razon_social AS cliente, cl.marca AS cliente_marca, cp.razon_social AS cpotencial, cp.marca AS cpotencial_marca, uc.nombre AS creador';
+        if ($this->db->tableExists('propuesta') && $this->db->fieldExists('propuesta_id', $this->table)) {
+            $select = 's.*, a.nombre AS actividad, e.nombre AS estado, u.nombre AS ejecutivo, pr.nombre AS propuesta, cl.razon_social AS cliente, cl.marca AS cliente_marca, cp.razon_social AS cpotencial, cp.marca AS cpotencial_marca, uc.nombre AS creador';
+        }
+        $builder = $this->db->table($this->table . ' s')
+            ->select($select)
             ->join('actividad a', 's.actividad_id = a.id AND a.deleted = 0', 'inner')
             ->join('estado e', 's.estado_id = e.id AND e.deleted = 0', 'inner')
             ->join('usuario u', 's.ejecutivo_id = u.id AND u.deleted = 0', 'inner')
@@ -86,6 +102,10 @@ final class FollowUpModel extends Model
             ->join('usuario_ucomercial uuc_fu', 'uuc_fu.usuario_id = s.ejecutivo_id AND uuc_fu.deleted = 0', 'left')
             ->join('usuario_ucomercial uuc_cl', 'uuc_cl.usuario_id = cl.ejecutivo_id AND uuc_cl.deleted = 0', 'left')
             ->join('usuario_ucomercial uuc_cp', 'uuc_cp.usuario_id = cp.ejecutivo_id AND uuc_cp.deleted = 0', 'left');
+        if ($this->db->tableExists('propuesta') && $this->db->fieldExists('propuesta_id', $this->table)) {
+            $builder->join('propuesta pr', 's.propuesta_id = pr.id AND pr.deleted = 0', 'left');
+        }
+        return $builder;
     }
 
     private function applyScope(object $builder, array $identity, string $scope): void

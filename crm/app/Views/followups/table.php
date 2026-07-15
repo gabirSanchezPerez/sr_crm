@@ -9,6 +9,7 @@
                     <th>Actividad</th>
                     <th>Estado</th>
                     <th>Cuenta</th>
+                    <th>Propuesta</th>
                     <th>Ejecutivo</th>
                     <th>Monto</th>
                     <th class="text-end no-sort">Acciones</th>
@@ -21,6 +22,13 @@
                         <td><?= esc($followUp['actividad']) ?></td>
                         <td><?= esc($followUp['estado']) ?></td>
                         <td><?= esc($followUp['cliente'] ?? $followUp['cpotencial'] ?? '-') ?></td>
+                        <td>
+                            <?php if (! empty($followUp['propuesta_id']) && ! empty($followUp['propuesta'])): ?>
+                                <a href="<?= site_url('propuesta/' . $followUp['propuesta_id']) ?>"><?= esc($followUp['propuesta']) ?></a>
+                            <?php else: ?>
+                                -
+                            <?php endif ?>
+                        </td>
                         <td><?= esc($followUp['ejecutivo']) ?></td>
                         <td><?= $followUp['monto'] === null ? '-' : number_format((float)$followUp['monto'], 2) ?></td>
                         <td class="text-end d-flex gap-1 justify-content-end">

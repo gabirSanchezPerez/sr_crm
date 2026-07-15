@@ -21,7 +21,7 @@
 /*# sourceMappingURL=theme.min.css.map */
 
 body {
-    background-color: #4f545f;
+    background-color: gainsboro;
 }
 table.dataTable thead th {
     background-color: #EAEBEF;
@@ -32,3 +32,8 @@ table.dataTable thead th {
 .table-responsive .table tr td {
     padding: 8px;
 }
+.page-header { background-color: #423f4c;}
+.page-header h5 { color: #fff !important; }
+.page-header .breadcrumb { color: #FFF;}
+.page-header .breadcrumb .breadcrumb-item a { color: #B4b4b4; }
+.page-header .breadcrumb .breadcrumb-item a:hover { color: #fff; }

@@ -54,6 +54,13 @@ $routes->group('', ['filter' => 'auth'], static function ($routes): void {
     $routes->post('documento/get_rows_subpanel', 'Documents::subpanelRows');
     $routes->get('documento/download/(:num)', 'Documents::download/$1');
     $routes->post('documento/delete/(:num)', 'Documents::delete/$1');
+    $routes->get('propuesta', 'Proposals::index');
+    $routes->match(['GET', 'POST'], 'propuesta/add', 'Proposals::add');
+    $routes->match(['GET', 'POST'], 'propuesta/get_rows', 'Proposals::rows');
+    $routes->get('propuesta/subpanel', 'Proposals::subpanel');
+    $routes->get('propuesta/(:num)', 'Proposals::view/$1');
+    $routes->match(['GET', 'POST'], 'propuesta/(:num)/edit', 'Proposals::edit/$1');
+    $routes->post('propuesta/delete/(:num)', 'Proposals::delete/$1');
     $routes->match(['GET', 'POST'], 'reporte/seguimiento', 'Reports::followUp');
     $routes->get('reporte/seguimiento/export', 'Reports::followUpExport');
     $routes->match(['GET', 'POST'], 'reporte/cartera', 'Reports::wallet');

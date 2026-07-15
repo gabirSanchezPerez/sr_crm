@@ -6,6 +6,7 @@ use App\Models\CatalogOptionModel;
 use App\Models\UserModel;
 use App\Services\AuthorizationService;
 use App\Services\FollowUpService;
+use App\Services\ProposalService;
 use App\Support\DataTableResponder;
 use CodeIgniter\HTTP\ResponseInterface;
 use InvalidArgumentException;
@@ -28,13 +29,13 @@ final class FollowUps extends BaseController
             return $this->forbidden();
         }
         return view('followups/index', [
-            'title' => 'Seguimientos | CRM', 
-            'heading' => 'Seguimientos', 
-            'breadcrumbs' => ['Inicio' => site_url('home'), 'Seguimientos' => null], 
-            'permissions' => session('permissions') ?? [], 
-            'followUps' => $this->followUps->rows($this->identity(), $this->scope(), $this->request->getGet('q')), 
-            'canAdd' => $this->can('add'), 
-            'canEdit' => $this->can('edit'), 
+            'title' => 'Seguimientos | CRM',
+            'heading' => 'Seguimientos',
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'Seguimientos' => null],
+            'permissions' => session('permissions') ?? [],
+            'followUps' => $this->followUps->rows($this->identity(), $this->scope(), $this->request->getGet('q')),
+            'canAdd' => $this->can('add'),
+            'canEdit' => $this->can('edit'),
             'canDelete' => $this->can('delete')
         ]);
     }
@@ -67,7 +68,7 @@ final class FollowUps extends BaseController
                 return $this->formView($this->request->getPost() ?: [], $this->validator->getErrors(), true);
             }
             try {
-                $id = $this->followUps->create($this->request->getPost(), $this->identity(), $this->scope(), $this->actorId());
+                $id = $this->followUps->create($this->request->getPost(), $this->identity(), $this->scope(), $this->actorId(), $this->proposalDocuments());
             } catch (InvalidArgumentException | RuntimeException $e) {
                 return $this->formView($this->request->getPost() ?: [], ['followup' => $e->getMessage()], true);
             }
@@ -143,7 +144,22 @@ final class FollowUps extends BaseController
     private function formView(array $record, array $errors, bool $isNew): string
     {
         $options = new CatalogOptionModel();
-        return view('followups/form', ['title' => ($isNew ? 'Nuevo seguimiento' : 'Editar seguimiento') . ' | CRM', 'heading' => $isNew ? 'Nuevo seguimiento' : 'Editar seguimiento', 'breadcrumbs' => ['Inicio' => site_url('home'), 'Seguimientos' => site_url('seguimiento'), $isNew ? 'Nuevo' : 'Editar' => null], 'permissions' => session('permissions') ?? [], 'followUp' => array_merge($record, $this->request->getPost() ?: []), 'errors' => $errors, 'isNew' => $isNew, 'activities' => $options->activeOptions('actividad'), 'states' => $options->activeOptions('estado'), 'executives' => $this->executiveOptions(), 'parents' => $this->followUps->parentOptions($this->identity(), $this->scope())]);
+        $proposals = new ProposalService();
+        return view('followups/form', [
+            'title' => ($isNew ? 'Nuevo seguimiento' : 'Editar seguimiento') . ' | CRM', 
+            'heading' => $isNew ? 'Nuevo seguimiento' : 'Editar seguimiento', 
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'Seguimientos' => site_url('seguimiento'), $isNew ? 'Nuevo' : 'Editar' => null], 
+            'permissions' => session('permissions') ?? [], 
+            'followUp' => array_merge($record, $this->request->getPost() ?: []), 
+            'errors' => $errors, 
+            'isNew' => $isNew, 
+            'activities' => $options->activeOptions('actividad'), 
+            'states' => $options->activeOptions('estado'), 
+            'executives' => $this->executiveOptions(), 
+            'parents' => $this->followUps->parentOptions($this->identity(), $this->scope()),
+            'proposals' => $proposals->rows($this->identity(), $this->authorization->scope((int) session('user.perfil_id'), 'propuesta')),
+            'channels' => $options->activeOptions('cgestion')
+        ]);
     }
 
     private function prefilledDefaults(): array
@@ -155,6 +171,14 @@ final class FollowUps extends BaseController
         $id = (int) $this->request->getGet('parent_id');
         if ($id > 0 && in_array($type, ['cliente', 'cpotencial'], true)) {
             $data['cliente_id'] = $id . '_' . ($type === 'cliente' ? 1 : 2);
+        }
+        $proposalId = (int) $this->request->getGet('propuesta_id');
+        if ($proposalId > 0) {
+            $proposal = (new ProposalService())->find($proposalId, $this->identity(), $this->authorization->scope((int) session('user.perfil_id'), 'propuesta'));
+            if ($proposal !== null) {
+                $data['propuesta_id'] = $proposalId;
+                $data['cliente_id'] = (int) ($proposal['cliente_id'] ?? 0) > 0 ? ((int) $proposal['cliente_id'] . '_1') : ((int) $proposal['cpotencial_id'] . '_2');
+            }
         }
         return $data;
     }
@@ -184,7 +208,10 @@ final class FollowUps extends BaseController
 
     private function rules(bool $requireParent): array
     {
-        $rules = ['fecha' => 'required|valid_date[Y-m-d]', 'hora' => 'required|regex_match[/^\d{2}:\d{2}(:\d{2})?$/]', 'actividad_id' => 'required|is_natural_no_zero', 'estado_id' => 'required|is_natural_no_zero', 'ejecutivo_id' => 'required|is_natural_no_zero', 'monto' => 'permit_empty|decimal', 'descripcion' => 'permit_empty|max_length[2000]', 'adjunto' => 'permit_empty|max_length[250]'];
+        $rules = ['fecha' => 'required|valid_date[Y-m-d]', 'hora' => 'required|regex_match[/^\d{2}:\d{2}(:\d{2})?$/]', 'actividad_id' => 'required|is_natural_no_zero', 'estado_id' => 'required|is_natural_no_zero', 'ejecutivo_id' => 'required|is_natural_no_zero', 'propuesta_id' => 'permit_empty|is_natural_no_zero', 'monto' => 'permit_empty|decimal', 'descripcion' => 'permit_empty|max_length[2000]', 'adjunto' => 'permit_empty|max_length[250]'];
+        if ((int) $this->request->getPost('actividad_id') === 3 && (int) $this->request->getPost('propuesta_id') <= 0) {
+            $rules += ['propuesta_nombre' => 'required|min_length[2]|max_length[245]', 'propuesta_canal_id' => 'required|is_natural_no_zero', 'propuesta_monto' => 'required|decimal', 'propuesta_contacto_id' => 'required|is_natural_no_zero', 'propuesta_estado_id' => 'required|is_natural_no_zero'];
+        }
         if ($requireParent) {
             $rules['cliente_id'] = 'required|max_length[30]';
         }
@@ -206,6 +233,12 @@ final class FollowUps extends BaseController
     private function actorId(): int
     {
         return (int) session('user.user_id');
+    }
+    /** @return list<\CodeIgniter\HTTP\Files\UploadedFile> */
+    private function proposalDocuments(): array
+    {
+        $files = $this->request->getFileMultiple('propuesta_documentos');
+        return is_array($files) ? $files : [];
     }
     private function forbidden(): ResponseInterface
     {
