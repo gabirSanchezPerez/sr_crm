@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useSelect2', true); ?>
 
 <?= $this->section('content') ?>
 <div class="row">
@@ -33,7 +34,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="perfil_id">Perfil</label>
-                            <select class="form-select" id="perfil_id" name="perfil_id" required>
+                            <select class="form-select js-select2" id="perfil_id" name="perfil_id" required data-placeholder="Perfil">
                                 <option value="">Seleccionar</option>
                                 <?php foreach ($profiles as $id => $name): ?>
                                     <option value="<?= esc($id) ?>" <?= (int) ($user['perfil_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($name) ?></option>
@@ -42,7 +43,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="cgestion_id">Canal de gestion</label>
-                            <select class="form-select" id="cgestion_id" name="cgestion_id" required>
+                            <select class="form-select js-select2" id="cgestion_id" name="cgestion_id" required data-placeholder="Canal de gestion">
                                 <option value="">Seleccionar</option>
                                 <?php foreach ($managementChannels as $id => $name): ?>
                                     <option value="<?= esc($id) ?>" <?= (int) ($user['cgestion_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($name) ?></option>
@@ -51,7 +52,7 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="ucomercial_id">Unidades comerciales</label>
-                            <select class="form-select" id="ucomercial_id" name="ucomercial_id[]" multiple size="6">
+                            <select class="form-select js-select2" id="ucomercial_id" name="ucomercial_id[]" multiple size="6" data-placeholder="Unidades comerciales">
                                 <?php foreach ($commercialUnits as $id => $name): ?>
                                     <option value="<?= esc($id) ?>" <?= in_array((int) $id, $selectedUnits, true) ? 'selected' : '' ?>><?= esc($name) ?></option>
                                 <?php endforeach ?>

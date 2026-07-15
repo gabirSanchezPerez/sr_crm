@@ -1,4 +1,6 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useDataTables', true); ?>
+<?php $this->setVar('useSelect2', true); ?>
 
 <?= $this->section('content') ?>
 <?php
@@ -18,7 +20,7 @@ $query = http_build_query(['u' => $filters['u'] ?? '-1', 'e' => $filters['e'] ??
         <form method="get" action="<?= current_url() ?>" class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label class="form-label" for="u">Unidad comercial</label>
-                <select class="form-select" id="u" name="u">
+                <select class="form-select js-select2" id="u" name="u" data-placeholder="Unidad comercial">
                     <?php foreach (($options['units'] ?? []) as $value => $label): ?>
                         <option value="<?= esc((string) $value, 'attr') ?>"<?= $selected('u', $value) ?>><?= esc($label) ?></option>
                     <?php endforeach ?>
@@ -26,7 +28,7 @@ $query = http_build_query(['u' => $filters['u'] ?? '-1', 'e' => $filters['e'] ??
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="e">Ejecutivo</label>
-                <select class="form-select" id="e" name="e">
+                <select class="form-select js-select2" id="e" name="e" data-placeholder="Ejecutivo">
                     <?php foreach (($options['executives'] ?? []) as $value => $label): ?>
                         <option value="<?= esc((string) $value, 'attr') ?>"<?= $selected('e', $value) ?>><?= esc($label) ?></option>
                     <?php endforeach ?>
@@ -34,7 +36,7 @@ $query = http_build_query(['u' => $filters['u'] ?? '-1', 'e' => $filters['e'] ??
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="t">Tipo</label>
-                <select class="form-select" id="t" name="t">
+                <select class="form-select js-select2" id="t" name="t" data-placeholder="Tipo">
                     <?php foreach (($options['types'] ?? []) as $value => $label): ?>
                         <option value="<?= esc((string) $value, 'attr') ?>"<?= $selected('t', $value) ?>><?= esc($label) ?></option>
                     <?php endforeach ?>
@@ -53,7 +55,7 @@ $query = http_build_query(['u' => $filters['u'] ?? '-1', 'e' => $filters['e'] ??
             <?= $this->include('components/empty_state') ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle js-datatable">
                     <thead>
                     <tr>
                         <th>Unidad comercial</th>

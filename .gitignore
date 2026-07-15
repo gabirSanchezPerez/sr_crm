@@ -168,3 +168,4 @@ openspec/
 plantilla/
 crm/docs/
 crm/writable/backups
+crm/writable/exports

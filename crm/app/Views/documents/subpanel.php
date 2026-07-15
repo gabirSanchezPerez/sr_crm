@@ -17,7 +17,7 @@
             <?= $this->include('components/empty_state') ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle js-datatable" data-page-length="5">
                     <thead>
                     <tr>
                         <th>Nombre</th>
@@ -25,7 +25,7 @@
                         <th>Cuenta</th>
                         <th>Tamano</th>
                         <th>Creado por</th>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-end no-sort">Acciones</th>
                     </tr>
                     </thead>
                     <tbody>

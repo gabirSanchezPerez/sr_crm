@@ -113,7 +113,7 @@ final class ProspectFeatureTest extends CIUnitTestCase
         $admin = $this->withSession($this->sessionFor(1, 1, 10))->get('cpotencial');
 
         $admin->assertOK();
-        $admin->assertSee('Prospectos');
+        $admin->assertSee('Clientes Potenciales');
         $admin->assertSee('Prospecto Norte');
         $admin->assertSee('Prospecto Sur');
         $admin->assertDontSee('Prospecto Convertido');

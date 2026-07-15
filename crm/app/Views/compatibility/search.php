@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useSelect2', true); ?>
 
 <?= $this->section('content') ?>
 <div class="card stretch stretch-full">
@@ -18,7 +19,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="t">Tipo</label>
-                <select class="form-select" id="t" name="t">
+                <select class="form-select js-select2" id="t" name="t" data-placeholder="Tipo">
                     <?php foreach ($types as $value => $label): ?>
                         <option value="<?= esc((string) $value, 'attr') ?>"><?= esc($label) ?></option>
                     <?php endforeach ?>

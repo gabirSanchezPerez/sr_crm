@@ -12,7 +12,7 @@ final class AuthorizationService
             'usuario' => self::CRUD, 'cliente' => self::CRUD, 'cpotencial' => ['index', 'convert'],
             'ucomercial' => self::CRUD, 'marca' => self::CRUD, 'cgestion' => self::CRUD,
             'auth' => self::CRUD, 'perfil' => self::CRUD, 'dashboard' => self::CRUD,
-            'sector' => self::CRUD, 'estado' => self::CRUD, 'seguimiento' => ['index'],
+            'sector' => self::CRUD, 'estado' => self::CRUD, 'seguimiento' => self::CRUD,
             'contacto' => self::CRUD, 'documento' => self::CRUD, 'reporte' => self::CRUD,
         ],
         2 => [

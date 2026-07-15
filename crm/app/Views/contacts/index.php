@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useDataTables', true); ?>
 
 <?= $this->section('content') ?>
 <div class="card stretch stretch-full">
@@ -16,7 +17,7 @@
             <?= $this->include('components/empty_state') ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle js-datatable">
                     <thead>
                     <tr>
                         <th>Nombre</th>
@@ -25,7 +26,7 @@
                         <th>Celular</th>
                         <th>Cuenta</th>
                         <th>Tipo</th>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-end no-sort">Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -38,7 +39,7 @@
                             <td><?= esc($contact['celular'] ?: '-') ?></td>
                             <td><?= esc(($isCustomer ? $contact['cliente'] : $contact['cpotencial']) ?? '-') ?></td>
                             <td><span class="badge bg-<?= $isCustomer ? 'success' : 'primary' ?>"><?= $isCustomer ? 'Cliente' : 'Prospecto' ?></span></td>
-                            <td class="text-end">
+                            <td class="text-end d-flex gap-1 justify-content-end">
                                 <?php if ($canEdit): ?>
                                     <a class="btn btn-sm btn-outline-primary" href="<?= site_url('contacto/' . $contact['id']) ?>" title="Editar"><i class="feather-edit-2"></i></a>
                                 <?php endif ?>

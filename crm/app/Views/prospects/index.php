@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useDataTables', true); ?>
 
 <?= $this->section('content') ?>
 <div class="card stretch stretch-full">
@@ -16,7 +17,7 @@
             <?= $this->include('components/empty_state') ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle js-datatable">
                     <thead>
                     <tr>
                         <th>Razon social</th>
@@ -24,7 +25,7 @@
                         <th>RFC</th>
                         <th>Sector</th>
                         <th>Ejecutivo</th>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-end no-sort">Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -35,7 +36,7 @@
                             <td><?= esc($prospect['rfc'] ?: '-') ?></td>
                             <td><?= esc($prospect['sector'] ?? '-') ?></td>
                             <td><?= esc($prospect['ejecutivo'] ?? '-') ?></td>
-                            <td class="text-end">
+                            <td class="text-end d-flex gap-1 justify-content-end">
                                 <?php if ($canEdit): ?>
                                     <a class="btn btn-sm btn-outline-primary" href="<?= site_url('cpotencial/' . $prospect['id']) ?>" title="Editar"><i class="feather-edit-2"></i></a>
                                 <?php endif ?>
@@ -44,7 +45,9 @@
                                         <?= csrf_field() ?>
                                         <button class="btn btn-sm btn-outline-success" type="submit" title="Convertir"><i class="feather-repeat"></i></button>
                                     </form>
-                                <?php endif ?>
+                                <?php else:
+                                    echo "<button onClick=\"convertedRow(".$prospect['id'].", '".$prospect['razon_social']." - ".$prospect['sector']."')\" title='' class='btn btn-sm btn-danger'><i class='fa fa-exchange-alt'></i></button>";
+                                 endif ?>
                                 <?php if ($canDelete): ?>
                                     <form method="post" action="<?= site_url('cpotencial/delete/' . $prospect['id']) ?>" class="d-inline">
                                         <?= csrf_field() ?>

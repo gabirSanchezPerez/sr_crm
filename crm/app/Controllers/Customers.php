@@ -33,9 +33,9 @@ final class Customers extends BaseController
         $rows = $this->customers->rows($this->identity(), $this->scope(), $this->request->getGet('q'));
 
         return view('customers/index', [
-            'title' => 'Clientes | CRM',
-            'heading' => 'Clientes',
-            'breadcrumbs' => ['Inicio' => site_url('home'), 'Clientes' => null],
+            'title' => 'Anunciantes | CRM',
+            'heading' => 'Anunciantes',
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'Anunciantes' => null],
             'permissions' => session('permissions') ?? [],
             'customers' => $rows,
             'canAdd' => $this->can('add'),
@@ -142,9 +142,9 @@ final class Customers extends BaseController
         $followUps = new FollowUpService();
 
         return view('customers/form', [
-            'title' => ($isNew ? 'Nuevo cliente' : 'Editar cliente') . ' | CRM',
-            'heading' => $isNew ? 'Nuevo cliente' : 'Editar cliente',
-            'breadcrumbs' => ['Inicio' => site_url('home'), 'Clientes' => site_url('cliente'), $isNew ? 'Nuevo' : 'Editar' => null],
+            'title' => ($isNew ? 'Nuevo Anunciante' : 'Editar Anunciante') . ' | CRM',
+            'heading' => $isNew ? 'Nuevo Anunciante' : 'Editar Anunciante',
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'ClieAnunciantesntes' => site_url('cliente'), $isNew ? 'Nuevo' : 'Editar' => null],
             'permissions' => session('permissions') ?? [],
             'customer' => array_merge($record, $this->request->getPost() ?: []),
             'errors' => $errors,

@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useSelect2', true); ?>
 
 <?= $this->section('content') ?>
 <div class="row">
@@ -14,7 +15,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="form-label" for="newEjecutivo">Ejecutivo destino</label>
-                        <select class="form-select" id="newEjecutivo" name="newEjecutivo" required>
+                        <select class="form-select js-select2" id="newEjecutivo" name="newEjecutivo" required data-placeholder="Ejecutivo destino">
                             <option value="">Seleccionar</option>
                             <?php foreach ($users as $candidate): ?>
                                 <?php if ((int) $candidate['id'] !== (int) $user['id']): ?>
@@ -35,14 +36,14 @@
                             <?php if ($clients === []): ?><p class="text-muted mb-0">Sin clientes asignados.</p><?php endif ?>
                         </div>
                         <div class="col-md-6">
-                            <h3 class="h6">Prospectos</h3>
+                            <h3 class="h6">Clientes Potenciales</h3>
                             <?php foreach ($prospects as $prospect): ?>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="accounts[CP][]" value="<?= esc($prospect['id']) ?>" id="prospect-<?= esc($prospect['id']) ?>">
                                     <label class="form-check-label" for="prospect-<?= esc($prospect['id']) ?>"><?= esc($prospect['nombre']) ?></label>
                                 </div>
                             <?php endforeach ?>
-                            <?php if ($prospects === []): ?><p class="text-muted mb-0">Sin prospectos asignados.</p><?php endif ?>
+                            <?php if ($prospects === []): ?><p class="text-muted mb-0">Sin Clientes Potenciales asignados.</p><?php endif ?>
                         </div>
                     </div>
                 </div>

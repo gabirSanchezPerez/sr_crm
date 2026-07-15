@@ -256,7 +256,6 @@ final class Contacts extends BaseController
             'nombre' => 'required|min_length[2]|max_length[245]',
             'telefono' => 'required|min_length[7]|max_length[10]',
             'celular' => 'permit_empty|min_length[7]|max_length[10]',
-            'otro_num' => 'permit_empty|min_length[7]|max_length[10]',
             'puesto' => 'permit_empty|max_length[145]',
             'departamento' => 'permit_empty|max_length[145]',
             'correo' => 'required|valid_email|max_length[245]',

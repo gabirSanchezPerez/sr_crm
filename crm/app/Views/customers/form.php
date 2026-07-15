@@ -1,8 +1,10 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useDataTables', ! $isNew); ?>
+<?php $this->setVar('useSelect2', true); ?>
 
 <?= $this->section('content') ?>
 <div class="row">
-    <div class="col-12 col-xl-8">
+    <div class="col-12 ">
         <div class="card stretch stretch-full">
             <form method="post">
                 <?= csrf_field() ?>
@@ -29,7 +31,7 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="sector_id">Sector</label>
-                            <select class="form-select" id="sector_id" name="sector_id" required>
+                            <select class="form-select js-select2" id="sector_id" name="sector_id" required data-placeholder="Sector">
                                 <option value="">Seleccionar</option>
                                 <?php foreach ($sectors as $id => $label): ?>
                                     <option value="<?= esc($id) ?>" <?= (int) ($customer['sector_id'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($label) ?></option>
@@ -38,7 +40,7 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="ejecutivo_id">Ejecutivo</label>
-                            <select class="form-select" id="ejecutivo_id" name="ejecutivo_id" required>
+                            <select class="form-select js-select2" id="ejecutivo_id" name="ejecutivo_id" required data-placeholder="Ejecutivo">
                                 <option value="">Seleccionar</option>
                                 <?php foreach ($executives as $id => $label): ?>
                                     <option value="<?= esc($id) ?>" <?= (int) ($customer['ejecutivo_id'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($label) ?></option>

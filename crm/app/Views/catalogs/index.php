@@ -1,4 +1,5 @@
 <?= $this->extend('layouts/app') ?>
+<?php $this->setVar('useDataTables', true); ?>
 
 <?= $this->section('content') ?>
 <div class="card stretch stretch-full">
@@ -18,13 +19,13 @@
             <?= $this->include('components/empty_state') ?>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle js-datatable">
                     <thead>
                     <tr>
                         <?php foreach ($listFields as $field): ?>
                             <th><?= esc($field->label) ?></th>
                         <?php endforeach ?>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-end no-sort">Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -33,7 +34,7 @@
                             <?php foreach ($listFields as $field): ?>
                                 <td><?= esc($row[$field->name] ?? '') ?></td>
                             <?php endforeach ?>
-                            <td class="text-end flex">
+                            <td class="text-end d-flex gap-1 justify-content-end">
                                 <?php foreach ($rowActions[(int) ($row['id'] ?? 0)] ?? [] as $action): ?>
                                     <?php if ($action['method'] === 'GET'): ?>
                                         <a class="btn btn-sm btn-<?= esc($action['style']) ?>" href="<?= esc($action['url'], 'attr') ?>" title="<?= esc($action['label'], 'attr') ?>">

@@ -33,9 +33,9 @@ final class Prospects extends BaseController
         $rows = $this->prospects->rows($this->identity(), $this->scope(), $this->request->getGet('q'));
 
         return view('prospects/index', [
-            'title' => 'Prospectos | CRM',
-            'heading' => 'Prospectos',
-            'breadcrumbs' => ['Inicio' => site_url('home'), 'Prospectos' => null],
+            'title' => 'Clientes Potenciales | CRM',
+            'heading' => 'Clientes Potenciales',
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'Clientes Potenciales' => null],
             'permissions' => session('permissions') ?? [],
             'prospects' => $rows,
             'canAdd' => $this->can('add'),
@@ -166,9 +166,9 @@ final class Prospects extends BaseController
         $followUps = new FollowUpService();
 
         return view('prospects/form', [
-            'title' => ($isNew ? 'Nuevo prospecto' : 'Editar prospecto') . ' | CRM',
-            'heading' => $isNew ? 'Nuevo prospecto' : 'Editar prospecto',
-            'breadcrumbs' => ['Inicio' => site_url('home'), 'Prospectos' => site_url('cpotencial'), $isNew ? 'Nuevo' : 'Editar' => null],
+            'title' => ($isNew ? 'Nuevo Cliente Potencial' : 'Editar Cliente Potencial') . ' | CRM',
+            'heading' => $isNew ? 'Nuevo Cliente Potencial' : 'Editar Cliente Potencial',
+            'breadcrumbs' => ['Inicio' => site_url('home'), 'Clientes Potenciales' => site_url('cpotencial'), $isNew ? 'Nuevo' : 'Editar' => null],
             'permissions' => session('permissions') ?? [],
             'prospect' => array_merge($record, $this->request->getPost() ?: []),
             'errors' => $errors,
