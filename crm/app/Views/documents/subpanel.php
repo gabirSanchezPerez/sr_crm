@@ -36,7 +36,7 @@
                             <td><?= esc($document['cliente'] ?? $document['cpotencial'] ?? '-') ?></td>
                             <td><?= number_format(((int) ($document['tamano'] ?? 0)) / 1024, 1) ?> KB</td>
                             <td><?= esc($document['creador'] ?? '-') ?></td>
-                            <td class="text-end">
+                            <td class="text-end d-flex gap-1 justify-content-end">
                                 <a class="btn btn-sm btn-outline-primary" href="<?= site_url('documento/download/' . $document['id']) ?>" title="Descargar"><i class="feather-download"></i></a>
                                 <?php if ($canDeleteDocument): ?>
                                     <form method="post" action="<?= site_url('documento/delete/' . $document['id']) ?>" class="d-inline">

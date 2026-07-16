@@ -28,7 +28,7 @@ class Home extends BaseController
             'heading' => 'Dashboard',
             'breadcrumbs' => ['Inicio' => null],
             'permissions' => session('permissions') ?? ['dashboard.index'],
-            'summary' => $this->dashboard->summary(session('user') ?? []),
+            'summary' => $this->dashboard->summary(session('user') ?? [], (int) ($this->request->getGet('anio') ?: date('Y'))),
         ]);
     }
 }

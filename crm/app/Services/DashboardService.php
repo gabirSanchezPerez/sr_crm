@@ -9,7 +9,7 @@ final class DashboardService
     }
 
     /** @return array<string, mixed> */
-    public function summary(array $identity): array
+    public function summary(array $identity, ?int $year = null): array
     {
         $profileId = (int) ($identity['perfil_id'] ?? 0);
         $customersScope = $this->authorization->scope($profileId, 'cliente');
@@ -25,12 +25,14 @@ final class DashboardService
             'prospectBrands' => ['label' => 'Marcas potenciales', 'value' => $this->brandCount('cpotencial', $identity, $prospectsScope, false), 'icon' => 'feather-bookmark'],
         ];
 
+        $year ??= (int) date('Y');
         return [
             'cards' => $cards,
             'chart' => [
                 'labels' => array_column($cards, 'label'),
                 'series' => array_map(static fn (array $card): int => (int) $card['value'], array_values($cards)),
             ],
+            'forecast' => (new ForecastService())->annual($year, $identity),
         ];
     }
 

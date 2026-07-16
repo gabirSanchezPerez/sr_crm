@@ -8,6 +8,8 @@ $routes->get('logout', 'Auth::logout', ['filter' => 'auth']);
 $routes->group('', ['filter' => 'auth'], static function ($routes): void {
     $routes->get('/', 'Home::index');
     $routes->get('home', 'Home::index');
+    $routes->get('meta', 'Goals::index');
+    $routes->post('meta/save', 'Goals::save');
     $routes->get('search', 'Compatibility::search');
     $routes->get('usuario', 'Users::index');
     $routes->match(['GET', 'POST'], 'usuario/add', 'Users::add');
@@ -57,6 +59,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes): void {
     $routes->get('propuesta', 'Proposals::index');
     $routes->match(['GET', 'POST'], 'propuesta/add', 'Proposals::add');
     $routes->match(['GET', 'POST'], 'propuesta/get_rows', 'Proposals::rows');
+    $routes->get('propuesta/contactos', 'Proposals::contacts');
     $routes->get('propuesta/subpanel', 'Proposals::subpanel');
     $routes->get('propuesta/(:num)', 'Proposals::view/$1');
     $routes->match(['GET', 'POST'], 'propuesta/(:num)/edit', 'Proposals::edit/$1');

@@ -23,6 +23,7 @@
         </div>
     </div>
 </div>
+<?php if(!empty($payments)): ?><div class="card mt-3"><div class="card-header"><h2 class="h6 mb-0">Distribución de pagos</h2></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Cuota</th><th>Mes</th><th class="text-end">Monto</th></tr></thead><tbody><?php foreach($payments as $payment): ?><tr><td><?= esc($payment['secuencia']) ?></td><td><?= esc(substr((string)$payment['fecha_pago'],0,7)) ?></td><td class="text-end">$<?= number_format((float)$payment['monto'],2) ?></td></tr><?php endforeach ?></tbody></table></div></div><?php endif ?>
 
 <?= view('proposals/documents', ['proposal' => $proposal, 'documents' => $documents, 'canAddDocument' => $canAddDocument, 'canDeleteDocument' => $canDeleteDocument]) ?>
 <?= view('followups/subpanel', ['followUps' => $followUps, 'parentType' => (int) ($proposal['cliente_id'] ?? 0) > 0 ? 'cliente' : 'cpotencial', 'parentId' => (int) (($proposal['cliente_id'] ?? 0) ?: ($proposal['cpotencial_id'] ?? 0)), 'proposalId' => (int) $proposal['id'], 'canAddFollowUp' => $canAddFollowUp, 'canEditFollowUp' => $canEditFollowUp, 'canDeleteFollowUp' => $canDeleteFollowUp]) ?>

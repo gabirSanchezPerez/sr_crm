@@ -47,6 +47,19 @@ final class ProposalService
         return $this->model->contactOptions($parentType, $parentId);
     }
 
+    /** @return array<int,string> */
+    public function contactOptionsForAccessibleParent(string $combinedParent, array $identity, string $scope): array
+    {
+        if (! str_contains($combinedParent, '_')) { throw new InvalidArgumentException('Selecciona un cliente o prospecto.'); }
+        [$id, $type] = explode('_', $combinedParent, 2);
+        $parentId = (int) $id;
+        $parentType = (int) $type === 1 ? 'cliente' : 'cpotencial';
+        if ($parentId <= 0 || ! $this->model->parentIsAccessible($parentType, $parentId, $identity, $scope)) {
+            throw new InvalidArgumentException('La cuenta no esta disponible para este usuario.');
+        }
+        return $this->model->contactOptions($parentType, $parentId);
+    }
+
     /** @param array<string,mixed> $input @param list<UploadedFile> $files */
     public function create(array $input, array $files, array $identity, string $scope, int $actorId): int
     {
@@ -104,6 +117,9 @@ final class ProposalService
         $storedPaths = [];
         $db->transStart();
         try {
+            if ((int) ($record['estado_id'] ?? 0) !== 4 && (int) ($data['estado_id'] ?? 0) === 4) {
+                (new ProposalPaymentService())->registerSale($id, $input, $identity, $scope, $actorId);
+            }
             if (! $this->model->update($id, $data)) {
                 throw new RuntimeException('No fue posible actualizar la propuesta.');
             }
@@ -139,6 +155,12 @@ final class ProposalService
             return [];
         }
         return $this->documents->forProposal($proposalId, $identity, $scope);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function payments(int $proposalId): array
+    {
+        return (new ProposalPaymentService())->forProposal($proposalId);
     }
 
     /** @param list<UploadedFile> $files @return list<string> */

@@ -13,7 +13,31 @@
     </div>
     <div class="card-body p-0">
         <?php if ($documents === []): ?><?= $this->include('components/empty_state') ?><?php else: ?>
-            <div class="table-responsive"><table class="table table-hover mb-0 align-middle js-datatable" data-page-length="5"><thead><tr><th>Nombre</th><th>Archivo</th><th>Tamano</th><th class="text-end no-sort">Acciones</th></tr></thead><tbody><?php foreach ($documents as $document): ?><tr><td><?= esc($document['nombre']) ?></td><td><?= esc($document['archivo_original']) ?></td><td><?= number_format(((int) ($document['tamano'] ?? 0)) / 1024, 1) ?> KB</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('documento/download/' . $document['id']) ?>" title="Descargar"><i class="feather-download"></i></a><?php if ($canDeleteDocument): ?> <form method="post" action="<?= site_url('documento/delete/' . $document['id']) ?>" class="d-inline"><?= csrf_field() ?><button class="btn btn-sm btn-outline-danger" type="submit" title="Desactivar"><i class="feather-trash-2"></i></button></form><?php endif ?></td></tr><?php endforeach ?></tbody></table></div>
-        <?php endif ?>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle js-datatable" data-page-length="5">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Archivo</th>
+                        <th>Tamano</th>
+                        <th class="text-end no-sort">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody><?php foreach ($documents as $document): ?><tr>
+                            <td><?= esc($document['nombre']) ?></td>
+                            <td><?= esc($document['archivo_original']) ?></td>
+                            <td><?= number_format(((int) ($document['tamano'] ?? 0)) / 1024, 1) ?> KB</td>
+                            <td class="text-end d-flex gap-1 justify-content-end">
+                                <a class="btn btn-sm btn-outline-primary" href="<?= site_url('documento/download/' . $document['id']) ?>" title="Descargar">
+                                    <i class="feather-download"></i>
+                                </a>
+                                <?php if ($canDeleteDocument): ?> 
+                                    <form method="post" action="<?= site_url('documento/delete/' . $document['id']) ?>" class="d-inline"><?= csrf_field() ?><button class="btn btn-sm btn-outline-danger" type="submit" title="Desactivar"><i class="feather-trash-2"></i></button></form>
+                                <?php endif ?>
+                            </td>
+                        </tr><?php endforeach ?></tbody>
+            </table>
+        </div>
+    <?php endif ?>
     </div>
 </div>

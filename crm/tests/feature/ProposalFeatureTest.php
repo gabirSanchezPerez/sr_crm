@@ -17,7 +17,7 @@ final class ProposalFeatureTest extends CIUnitTestCase
         parent::setUp();
 
         $db = db_connect();
-        foreach (['seguimiento', 'documento', 'propuesta', 'contacto', 'cpotencial', 'cliente', 'usuario_ucomercial', 'usuario', 'actividad', 'estado', 'sector', 'ucomercial', 'cgestion', 'perfil'] as $table) {
+        foreach (['propuesta_pago', 'seguimiento', 'documento', 'propuesta', 'contacto', 'cpotencial', 'cliente', 'usuario_ucomercial', 'usuario', 'actividad', 'estado', 'sector', 'ucomercial', 'cgestion', 'perfil'] as $table) {
             $db->query('DROP TABLE IF EXISTS ' . $db->escapeIdentifiers($db->prefixTable($table)));
         }
 
@@ -72,6 +72,7 @@ final class ProposalFeatureTest extends CIUnitTestCase
             ejecutivo_id INTEGER NOT NULL, tipo_id INTEGER NOT NULL, propuesta_id INTEGER NULL, monto REAL NULL,
             u_crea INTEGER NULL, u_modifica INTEGER NULL, f_creacion TEXT NULL, f_modificacion TEXT NULL, deleted INTEGER DEFAULT 0
         )');
+        $db->query('CREATE TABLE ' . $db->escapeIdentifiers($db->prefixTable('propuesta_pago')) . ' (id INTEGER PRIMARY KEY AUTOINCREMENT, propuesta_id INTEGER NOT NULL, fecha_pago TEXT NOT NULL, monto NUMERIC NOT NULL, secuencia INTEGER NOT NULL, u_crea INTEGER, u_modifica INTEGER, f_creacion TEXT, f_modificacion TEXT, deleted INTEGER DEFAULT 0, UNIQUE(propuesta_id,secuencia))');
         if (method_exists($db, 'resetDataCache')) {
             $db->resetDataCache();
         }
@@ -95,6 +96,7 @@ final class ProposalFeatureTest extends CIUnitTestCase
         $db->table('estado')->insertBatch([
             ['id' => 1, 'nombre' => 'Abierta', 'deleted' => 0],
             ['id' => 2, 'nombre' => 'Ganada', 'deleted' => 0],
+            ['id' => 4, 'nombre' => 'Venta', 'deleted' => 0],
         ]);
 
         $this->insertUser(1, 'Administrador', 1, 10);
@@ -253,6 +255,24 @@ final class ProposalFeatureTest extends CIUnitTestCase
         $this->assertStringContainsString('value="10_1" selected', $body);
     }
 
+    public function testProposalContactsLoadAfterSelectingAccessibleAccount(): void
+    {
+        $response = $this->withSession($this->sessionFor(2, 2, 10))->get('propuesta/contactos?cliente_id=10_1');
+        $response->assertOK();
+        $payload = json_decode((string) $response->getJSON(), true);
+        $this->assertSame([['id' => 100, 'text' => 'Contacto Norte']], $payload['items']);
+
+        $denied = $this->withSession($this->sessionFor(2, 2, 10))->get('propuesta/contactos?cliente_id=11_1');
+        $denied->assertStatus(422);
+        $this->assertSame([], json_decode((string) $denied->getJSON(), true)['items']);
+
+        $form = $this->withSession($this->sessionFor(3, 3, 10))->get('propuesta/add');
+        $form->assertOK();
+        $form->assertSee('Selecciona primero un cliente o prospecto');
+        $form->assertSee('propuesta/contactos');
+        $form->assertSee('change.proposalContacts');
+    }
+
     public function testProposalServiceValidatesContactActivityAndRollbackCleansStoredFiles(): void
     {
         $service = new ProposalService();
@@ -295,6 +315,18 @@ final class ProposalFeatureTest extends CIUnitTestCase
 
         $this->assertSame(0, (int) db_connect()->table('propuesta')->where('nombre', 'Rollback archivos')->countAllResults());
         $this->assertSame($before, $this->storedDocumentFiles());
+    }
+
+    public function testExecutiveRegistersSaleDirectlyWithBalancedPayments(): void
+    {
+        $response=$this->withSession($this->sessionFor(3,3,10))->post('propuesta/200/edit',$this->withCsrf(['nombre'=>'Propuesta Norte','canal_id'=>1,'monto'=>'1000.00','cliente_id'=>'10_1','contacto_id'=>100,'estado_id'=>4,'pago_mes'=>['2026-07','2026-08'],'pago_monto'=>['400','600']]));
+        $response->assertRedirectTo('propuesta/200');$this->assertSame(4,(int)db_connect()->table('propuesta')->select('estado_id')->where('id',200)->get()->getRowArray()['estado_id']);$this->assertSame(2,db_connect()->table('propuesta_pago')->where('propuesta_id',200)->where('deleted',0)->countAllResults());
+    }
+
+    public function testLinkedSaleFollowUpIsAtomicAndRequiresProposal(): void
+    {
+        $ok=$this->withSession($this->sessionFor(3,3,10))->post('seguimiento/add',$this->withCsrf(['cliente_id'=>'10_1','fecha'=>'2026-07-20','hora'=>'10:00','actividad_id'=>1,'estado_id'=>4,'ejecutivo_id'=>3,'propuesta_id'=>200,'descripcion'=>'Venta cerrada','pago_mes'=>['2026-07'],'pago_monto'=>['1000']]));$sale=db_connect()->table('seguimiento')->where('descripcion','Venta cerrada')->get()->getRowArray();$this->assertNotNull($sale);$ok->assertRedirectTo('seguimiento/'.$sale['id']);$this->assertSame(4,(int)db_connect()->table('propuesta')->select('estado_id')->where('id',200)->get()->getRowArray()['estado_id']);
+        db_connect()->table('propuesta')->where('id',200)->update(['estado_id'=>1]);$bad=$this->withSession($this->sessionFor(3,3,10))->post('seguimiento/add',$this->withCsrf(['cliente_id'=>'10_1','fecha'=>'2026-07-21','hora'=>'10:00','actividad_id'=>1,'estado_id'=>4,'ejecutivo_id'=>3,'propuesta_id'=>200,'descripcion'=>'Venta invalida','pago_mes'=>['2026-07'],'pago_monto'=>['999']]));$bad->assertOK();$this->assertSame(0,db_connect()->table('seguimiento')->where('descripcion','Venta invalida')->countAllResults());$this->assertSame(1,(int)db_connect()->table('propuesta')->select('estado_id')->where('id',200)->get()->getRowArray()['estado_id']);
     }
 
     private function insertUser(int $id, string $name, int $profileId, int $unitId): void

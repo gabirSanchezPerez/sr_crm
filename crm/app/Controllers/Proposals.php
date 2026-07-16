@@ -56,6 +56,21 @@ final class Proposals extends BaseController
         ));
     }
 
+    public function contacts(): ResponseInterface
+    {
+        if (! $this->can('index')) {
+            return $this->response->setStatusCode(403)->setJSON(['items' => []]);
+        }
+        try {
+            $options = $this->proposals->contactOptionsForAccessibleParent((string) $this->request->getGet('cliente_id'), $this->identity(), $this->scope());
+        } catch (InvalidArgumentException $exception) {
+            return $this->response->setStatusCode(422)->setJSON(['items' => [], 'message' => $exception->getMessage()]);
+        }
+        $items = [];
+        foreach ($options as $id => $label) { $items[] = ['id' => (int) $id, 'text' => $label]; }
+        return $this->response->setJSON(['items' => $items]);
+    }
+
     public function add(): string|ResponseInterface
     {
         if (! $this->can('add')) {
@@ -92,6 +107,7 @@ final class Proposals extends BaseController
             'permissions' => session('permissions') ?? [],
             'proposal' => $proposal,
             'documents' => $this->proposals->documents($id, $this->identity(), $this->scope()),
+            'payments' => $this->proposals->payments($id),
             'followUps' => $followUps->forProposal($id, $this->identity(), $this->authorization->scope((int) session('user.perfil_id'), 'seguimiento')),
             'canEdit' => $this->can('edit'),
             'canDelete' => $this->can('delete'),
@@ -171,6 +187,7 @@ final class Proposals extends BaseController
             'contacts' => $this->safeContacts(array_merge($record, $this->request->getPost() ?: [])),
             'channels' => $options->activeOptions('cgestion'),
             'states' => $options->activeOptions('estado'),
+            'payments' => ! $isNew && isset($record['id']) ? $this->proposals->payments((int) $record['id']) : [],
         ]);
     }
 

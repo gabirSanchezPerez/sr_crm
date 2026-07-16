@@ -7,6 +7,7 @@ $items = [
     ['permission' => 'cliente.index', 'path' => 'cliente', 'match' => ['cliente'], 'icon' => 'feather-users', 'label' => 'Anunciantes', 'grupo' => 'Cartera'],
     ['permission' => 'contacto.index', 'path' => 'contacto', 'match' => ['contacto'], 'icon' => 'feather-book', 'label' => 'Contactos', 'grupo' => 'Cartera'],
     ['permission' => 'propuesta.index', 'path' => 'propuesta', 'match' => ['propuesta'], 'icon' => 'feather-file-text', 'label' => 'Propuestas', 'grupo' => 'Gestión'],
+    ['permission' => 'meta.index', 'path' => 'meta', 'match' => ['meta'], 'icon' => 'feather-target', 'label' => 'Metas', 'grupo' => 'Gestión'],
     ['permission' => 'seguimiento.index', 'path' => 'seguimiento', 'match' => ['seguimiento'], 'icon' => 'feather-calendar', 'label' => 'Seguimientos', 'grupo' => 'Gestión'],
     ['permission' => 'reporte.index', 'path' => 'reporte/seguimiento', 'match' => ['reporte'], 'icon' => 'feather-bar-chart', 'label' => 'Reporte Seguimiento', 'grupo' => 'Reportes'],
     ['permission' => 'reporte.index', 'path' => 'reporte/cartera', 'match' => ['reporte'], 'icon' => 'feather-bar-chart-2', 'label' => 'Reporte Cartera', 'grupo' => 'Reportes'],
@@ -43,7 +44,7 @@ $isActive = static function (array $prefixes) use ($path): bool {
         </div>
         <div class="navbar-content">
             <ul class="nxl-navbar">
-                <li class="nxl-item nxl-caption"><label>CRM</label></li>
+                <li class="nxl-item nxl-caption"><label>CRM Radiopolis</label></li>
                 <?php foreach ($groups as $group): ?>
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">

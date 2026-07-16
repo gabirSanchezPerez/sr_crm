@@ -15,17 +15,28 @@
                                 <option value="">Seleccionar</option><?php foreach ($channels as $id => $label): ?><option value="<?= esc($id) ?>" <?= (int) ($proposal['canal_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($label) ?></option><?php endforeach ?>
                             </select></div>
                         <div class="col-md-3"><label class="form-label" for="monto">Monto</label><input class="form-control" id="monto" name="monto" type="number" step="0.01" value="<?= esc($proposal['monto'] ?? '') ?>" required></div>
-                        <div class="col-md-6"><label class="form-label" for="cliente_id">Cliente o prospecto</label><select class="form-select js-select2" id="cliente_id" name="cliente_id" required data-placeholder="Cuenta">
-                                <option value="">Seleccionar</option><?php foreach ($parents as $parent): ?><option value="<?= esc($parent['id']) ?>" <?= $selectedParent === (string) $parent['id'] ? 'selected' : '' ?>><?= esc($parent['text']) ?></option><?php endforeach ?>
+                        <div class="col-md-6">
+                            <label class="form-label" for="cliente_id">Cliente o prospecto</label>
+                            <select class="form-select js-select2" id="cliente_id" name="cliente_id" required data-placeholder="Cuenta">
+                                <option value="">Seleccionar</option>
+                                <?php foreach ($parents as $parent): ?>
+                                    <option value="<?= esc($parent['id']) ?>" <?= $selectedParent === (string) $parent['id'] ? 'selected' : '' ?>><?= esc($parent['text']) ?></option>
+                                <?php endforeach ?>
                             </select></div>
-                        <div class="col-md-3"><label class="form-label" for="contacto_id">Contacto</label><select class="form-select js-select2" id="contacto_id" name="contacto_id" required data-placeholder="Contacto">
-                                <option value="">Seleccionar</option><?php foreach ($contacts as $id => $label): ?><option value="<?= esc($id) ?>" <?= (int) ($proposal['contacto_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($label) ?></option><?php endforeach ?>
+                        <div class="col-md-3">
+                            <label class="form-label" for="contacto_id">Contacto</label>
+                            <select class="form-select js-select2" id="contacto_id" name="contacto_id" required data-placeholder="Contacto">
+                                <option value="">Seleccionar</option>
+                                <?php foreach ($contacts as $id => $label): ?>
+                                    <option value="<?= esc($id) ?>" <?= (int) ($proposal['contacto_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($label) ?></option>
+                                <?php endforeach ?>
                             </select></div>
                         <div class="col-md-3"><label class="form-label" for="estado_id">Status</label><select class="form-select js-select2" id="estado_id" name="estado_id" required data-placeholder="Status">
                                 <option value="">Seleccionar</option><?php foreach ($states as $id => $label): ?><option value="<?= esc($id) ?>" <?= (int) ($proposal['estado_id'] ?? 0) === (int) $id ? 'selected' : '' ?>><?= esc($label) ?></option><?php endforeach ?>
                             </select></div>
                         <div class="col-12"><label class="form-label" for="descripcion">Descripcion</label><textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= esc($proposal['descripcion'] ?? '') ?></textarea></div>
                         <div class="col-12"><label class="form-label" for="documentos">Documentos</label><input class="form-control" id="documentos" name="documentos[]" type="file" multiple></div>
+                        <?= view('components/payment_schedule', ['payments' => $payments ?? [], 'record' => $proposal, 'proposalAmount' => $proposal['monto'] ?? 0]) ?>
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="<?= site_url('propuesta') ?>">Cancelar</a><button class="btn btn-primary" type="submit"><i class="feather-save me-2"></i>Guardar</button></div>
@@ -33,4 +44,59 @@
         </div>
     </div>
 </div>
+<?= $this->endSection() ?>
+<?= $this->section('scripts') ?>
+<script>
+    (function() {
+        const parent = document.getElementById('cliente_id');
+        const contact = document.getElementById('contacto_id');
+        if (!parent || !contact) return;
+        const endpoint = <?= json_encode(site_url('propuesta/contactos'), JSON_UNESCAPED_SLASHES) ?>;
+        let requestNumber = 0;
+
+        function option(value, text) {
+            const item = document.createElement('option');
+            item.value = value;
+            item.textContent = text;
+            return item;
+        }
+        async function loadContacts() {
+            const selected = parent.value;
+            const currentRequest = ++requestNumber;
+            contact.replaceChildren(option('', selected ? 'Cargando contactos...' : 'Selecciona primero un cliente o prospecto'));
+            contact.disabled = true;
+            if (window.jQuery && jQuery.fn.select2) jQuery(contact).trigger('change.select2');
+            if (!selected) return;
+            try {
+                const response = await fetch(endpoint + '?cliente_id=' + encodeURIComponent(selected), {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.message || 'No fue posible cargar los contactos.');
+                if (currentRequest !== requestNumber) return;
+                contact.replaceChildren(option('', 'Seleccionar contacto'));
+                (payload.items || []).forEach(item => contact.append(option(item.id, item.text)));
+                if (!(payload.items || []).length) contact.options[0].textContent = 'La cuenta no tiene contactos activos';
+                contact.disabled = false;
+            } catch (error) {
+                if (currentRequest !== requestNumber) return;
+                contact.replaceChildren(option('', error.message));
+            }
+            if (window.jQuery && jQuery.fn.select2) jQuery(contact).trigger('change.select2');
+        }
+        if (window.jQuery) {
+            jQuery(parent)
+                .off('change.proposalContacts')
+                .on('change.proposalContacts', loadContacts);
+        } else {
+            parent.addEventListener('change', loadContacts);
+        }
+        if (!parent.value) {
+            contact.replaceChildren(option('', 'Selecciona primero un cliente o prospecto'));
+            contact.disabled = true;
+        }
+    })();
+</script>
 <?= $this->endSection() ?>

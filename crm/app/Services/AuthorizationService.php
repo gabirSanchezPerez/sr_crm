@@ -13,17 +13,17 @@ final class AuthorizationService
             'ucomercial' => self::CRUD, 'marca' => self::CRUD, 'cgestion' => self::CRUD,
             'auth' => self::CRUD, 'perfil' => self::CRUD, 'dashboard' => self::CRUD,
             'sector' => self::CRUD, 'estado' => self::CRUD, 'seguimiento' => self::CRUD,
-            'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => self::CRUD,
+            'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => self::CRUD, 'meta' => self::CRUD,
         ],
         2 => [
             'usuario' => self::CRUD, 'cliente' => ['index'], 'cpotencial' => ['index'],
             'ucomercial' => self::CRUD, 'marca' => self::CRUD, 'cgestion' => self::CRUD,
             'auth' => self::CRUD, 'dashboard' => self::CRUD, 'perfil' => ['edit'],
-            'seguimiento' => self::CRUD, 'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => ['index'],
+            'seguimiento' => self::CRUD, 'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => ['index'], 'meta' => self::CRUD,
         ],
         3 => [
             'cliente' => ['index'], 'cpotencial' => ['index'], 'auth' => ['edit'],
-            'dashboard' => self::CRUD, 'seguimiento' => self::CRUD, 'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => ['index'],
+            'dashboard' => self::CRUD, 'seguimiento' => self::CRUD, 'contacto' => self::CRUD, 'documento' => self::CRUD, 'propuesta' => self::CRUD, 'reporte' => ['index'], 'meta' => ['index'],
         ],
         4 => [
             'cliente' => ['index'], 'cpotencial' => ['index', 'add', 'edit', 'delete', 'convert'], 'auth' => ['edit'],
@@ -44,8 +44,8 @@ final class AuthorizationService
     ];
 
     private const SCOPES = [
-        2 => ['usuario' => 'team', 'cliente' => 'team', 'cpotencial' => 'team', 'seguimiento' => 'team', 'contacto' => 'team', 'documento' => 'team', 'propuesta' => 'team'],
-        3 => ['usuario' => 'owner', 'cliente' => 'owner', 'cpotencial' => 'owner', 'seguimiento' => 'owner', 'contacto' => 'owner', 'documento' => 'owner', 'propuesta' => 'owner'],
+        2 => ['usuario' => 'team', 'cliente' => 'team', 'cpotencial' => 'team', 'seguimiento' => 'team', 'contacto' => 'team', 'documento' => 'team', 'propuesta' => 'team', 'meta' => 'team'],
+        3 => ['usuario' => 'owner', 'cliente' => 'owner', 'cpotencial' => 'owner', 'seguimiento' => 'owner', 'contacto' => 'owner', 'documento' => 'owner', 'propuesta' => 'owner', 'meta' => 'owner'],
         4 => ['usuario' => 'owner'],
         5 => ['usuario' => 'team', 'cliente' => 'team', 'cpotencial' => 'team', 'seguimiento' => 'team', 'contacto' => 'team', 'documento' => 'team', 'propuesta' => 'team'],
         6 => ['usuario' => 'team', 'cliente' => 'team', 'cpotencial' => 'team', 'seguimiento' => 'team', 'contacto' => 'team', 'documento' => 'team', 'propuesta' => 'team'],

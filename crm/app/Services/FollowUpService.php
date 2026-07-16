@@ -47,6 +47,10 @@ final class FollowUpService
                 $data['propuesta_id'] = $proposalService->createWithoutTransaction($proposalInput, $identity, $scope, $actorId);
                 $storedProposalDocuments = $proposalService->attachDocuments((int) $data['propuesta_id'], $proposalDocuments, $identity, $scope, $actorId);
             }
+            if ((int) $data['estado_id'] === 4) {
+                if ((int) ($data['propuesta_id'] ?? 0) <= 0) { throw new InvalidArgumentException('Una Venta requiere una propuesta vinculada.'); }
+                (new ProposalPaymentService())->registerSale((int) $data['propuesta_id'], $input, $identity, $scope, $actorId);
+            }
             $data = $this->schemaPayload($data);
             $id = $this->model->insert($data, true);
             if ($id === false) { throw new RuntimeException('No fue posible crear el seguimiento.'); }

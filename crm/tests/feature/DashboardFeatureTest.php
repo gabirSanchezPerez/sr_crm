@@ -103,6 +103,8 @@ final class DashboardFeatureTest extends CIUnitTestCase
         $response->assertSee('assets/js/common-init.min.js');
         $response->assertSee('assets/vendors/js/apexcharts.min.js');
         $response->assertSee('dashboardSummaryChart');
+        $response->assertSee('forecastChart');
+        $response->assertSee('Forecast');
     }
 
     private function insertUser(int $id, string $name, string $email, int $profileId, int $unitId): void
